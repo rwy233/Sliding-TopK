@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-typedef uint64_t DATA_TYPE;
+typedef uint32_t DATA_TYPE;
 
 //#define N 1000000  // maximum flow
 //#define M 1000000  // maximum size of stream-summary or CSS

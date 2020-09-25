@@ -14,7 +14,7 @@
 
 #include "Hash.h"
 #include "param.h"
-#define HK_d 10
+#define HK_d 5
 #define HK_b 1.08
 
 

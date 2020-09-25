@@ -20,7 +20,8 @@
 using namespace std;
 unordered_map <DATA_TYPE ,int> mp;
 //map <DATA_TYPE, int> map_hk;
-
+#define NTIMETEST
+#define algo 1
 
 //argv[1]:MEM  KB
 //argv[2]:K  heavy_hitter
@@ -49,7 +50,7 @@ void BenchOurs(int argc, char* argv[]){
 
     MEM = atoi(argv[1]);
 	cout <<"file:" << argv[2] << " memory:" << MEM << endl;
-    K = 1000;
+    K = 3000;
     int cycle = 1000000;
     DATA_TYPE* cyc_dat = new DATA_TYPE[cycle];
     int top_k = 1000;
@@ -60,13 +61,18 @@ void BenchOurs(int argc, char* argv[]){
     int single_size = sizeof(DATA_TYPE) + (4 * (field_num));
 
     hk_M = MEM * 1024 / (single_size * HK_d);
-    // heavykeeper *hk;
-    // hk = new heavykeeper(hk_M,cycle);
-     //wcss *hk;
-    // hk = new wcss(cycle, MEM * 1024, 4);
+#if algo==1
+    heavykeeper *hk;
+    hk = new heavykeeper(hk_M,cycle);
+#endif
+#if algo==2
+    wcss *hk;
+    hk = new wcss(cycle, MEM * 1024, 4);
+#endif
+#if algo==3
     Summary *hk;
     hk = new Summary(MEM * 1024, 4, cycle, K / 10);
-
+#endif
     // double average_cr = 0;
     // double average_rr = 0;
     // double average_are = 0;
@@ -79,17 +85,19 @@ void BenchOurs(int argc, char* argv[]){
     double average_are = 0;
 
     // Inserting
+    int clock_ = clock();
     for (int i=0; i<=m; i++)
     {
         DATA_TYPE s;
         fread(&s, sizeof(DATA_TYPE), 1, file);
-
+        hk->Init(s, i);
+#ifndef TIMETEST
         if(i >= cycle){
             mp[cyc_dat[(i%cycle)]] --;
         }
         cyc_dat[(i%cycle)] = s;
         mp[s]++;
-        hk->Init(s, i);
+        
 
 
         if((i%(cycle/5)== 0)&&(i>=2*cycle)){
@@ -135,8 +143,8 @@ void BenchOurs(int argc, char* argv[]){
             cout << summary.memory << endl;
             cout << heavy << " " << yes << " " << no << endl;
             */
-            cout << "lambda _Algorithm,Arrivals:"<<i << ",Recall Rate:"<<(double)tp/top_k<< endl;
-            cout <<"lambda _Algorithm,Arrivals:"<<i << ",Precision Rate:"<<(double)tp/top_k<< endl; // recall rate = Precision rate
+            cout << "lambda_Algorithm,Arrivals:"<<i << ",Recall Rate:"<<(double)tp/top_k<< endl;
+            cout <<"lambda_Algorithm,Arrivals:"<<i << ",Precision Rate:"<<(double)tp/top_k<< endl; // recall rate = Precision rate
 			cout <<are / top_k <<endl;
 			
             average_prec += (double)tp / top_k;
@@ -144,10 +152,15 @@ void BenchOurs(int argc, char* argv[]){
 			average_are += are/top_k;
 
         }
+#endif
     }
-
+#ifndef TIMETEST
     // cout << "total average heavy hitter:" << average_heavy / out_num << endl;
     cout << "average precision rate:" << average_prec / out_num << endl;
     cout <<"average recall rate:" << average_recall / out_num << endl;
     cout <<"average are:" << average_are / out_num << endl;
+#else
+    double total_time = (double)(clock() - clock_)/CLOCKS_PER_SEC;
+    cout << m / total_time / 1000000.0 << endl;
+#endif
 }
