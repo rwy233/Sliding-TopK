@@ -1,0 +1,1 @@
+/usr/local/bin/g++-9  -g -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/Sliding.dir/main.cpp.o  -o Sliding 
