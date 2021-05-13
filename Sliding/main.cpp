@@ -20,8 +20,8 @@
 using namespace std;
 unordered_map <DATA_TYPE ,int> mp;
 //map <DATA_TYPE, int> map_hk;
-#define NTIMETEST
-#define algo 1
+// #define TIMETEST
+#define algo 2
 
 //argv[1]:MEM  KB
 //argv[2]:K  heavy_hitter
@@ -50,10 +50,10 @@ void BenchOurs(int argc, char* argv[]){
 
     MEM = atoi(argv[1]);
 	cout <<"file:" << argv[2] << " memory:" << MEM << endl;
-    K = 3000;
+    K = 200;
     int cycle = 1000000;
     DATA_TYPE* cyc_dat = new DATA_TYPE[cycle];
-    int top_k = 1000;
+    int top_k = 3000;
     int m = 8000000;
 
     int hk_M;
@@ -71,7 +71,7 @@ void BenchOurs(int argc, char* argv[]){
 #endif
 #if algo==3
     Summary *hk;
-    hk = new Summary(MEM * 1024, 4, cycle, K / 10);
+    hk = new Summary(MEM * 1024, sizeof(DATA_TYPE), cycle, K / 10);
 #endif
     // double average_cr = 0;
     // double average_rr = 0;
@@ -143,9 +143,9 @@ void BenchOurs(int argc, char* argv[]){
             cout << summary.memory << endl;
             cout << heavy << " " << yes << " " << no << endl;
             */
-            cout << "lambda_Algorithm,Arrivals:"<<i << ",Recall Rate:"<<(double)tp/top_k<< endl;
-            cout <<"lambda_Algorithm,Arrivals:"<<i << ",Precision Rate:"<<(double)tp/top_k<< endl; // recall rate = Precision rate
-			cout <<are / top_k <<endl;
+            cerr << "lambda_Algorithm,Arrivals:"<<i << ",Recall Rate:"<<(double)tp/top_k<< endl;
+            cerr <<"lambda_Algorithm,Arrivals:"<<i << ",Precision Rate:"<<(double)tp/top_k<< endl; // recall rate = Precision rate
+			cerr <<are / top_k <<endl;
 			
             average_prec += (double)tp / top_k;
 			average_recall +=(double)tp / top_k;

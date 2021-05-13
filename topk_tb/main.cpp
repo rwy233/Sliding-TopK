@@ -14,18 +14,20 @@
 #include "param.h"
 
 #include "heavykeeper.h"
-#include "wcss.h"
 #include "summary.h"
 
 using namespace std;
 unordered_map <DATA_TYPE ,int> mp;
 //map <DATA_TYPE, int> map_hk;
-#define TIMETEST
+// #define TIMETEST
 #define algo 1
 
 struct Packet{
     DATA_TYPE dat;
     int timestamp;
+    bool operator < (const Packet&p)const{
+        return timestamp < p.timestamp;
+    }
 };
 
 //argv[1]:MEM  KB
@@ -55,12 +57,15 @@ void BenchOurs(int argc, char* argv[]){
 
     MEM = atoi(argv[1]);
 	cout <<"file:" << argv[2] << " memory:" << MEM << endl;
-    K = 3000;
-    int cycle = 17978572;
+    K = 200;
+    
     queue<Packet> cyc_dat;// = new Packet[cycle];
-    int top_k = 1000;
-    int m = 8000000;
-
+    int top_k = 3000;
+    int m = 8000000 ;
+    Packet *BUF = new Packet[m];
+    fread(BUF, sizeof(Packet),m , file);
+    sort(BUF,BUF+m);
+    int cycle = (double)(BUF[m-1].timestamp - BUF[0].timestamp) / m * 1000000;
     int hk_M;
     int field_num = 4;
     int single_size = sizeof(DATA_TYPE) + (4 * (field_num));
@@ -72,7 +77,7 @@ void BenchOurs(int argc, char* argv[]){
 #endif
 #if algo==2
     wcss *hk;
-    hk = new wcss(cycle, MEM * 1024, 4);
+    hk = new wcss(cycle, MEM * 1024, sizeof(DATA_TYPE) );
 #endif
 #if algo==3
     Summary *hk;
@@ -88,19 +93,27 @@ void BenchOurs(int argc, char* argv[]){
     double average_prec = 0;
     int average_heavy = 0;
     double average_are = 0;
-
+    Packet p;
     // Inserting
     int clock_ = clock();
     int latestT;
+    int preT=-1;
     int firstT = -1;
-    for (int i=0; i<=m; i++)
+
+    
+    for (int i=0; i<m; i++)
     {
-        Packet p;
-        fread(&p, sizeof(Packet), 1, file);
-        DATA_TYPE s = p.dat;
-        int timestamp = p.timestamp;
+        int timestamp;
+        DATA_TYPE s;
+        // fread(&p, sizeof(Packet), 1, file);
+        p = BUF[i];
+        s = p.dat;
+        timestamp = p.timestamp;
         if(firstT == -1) firstT = timestamp;
-	timestamp -= firstT;
+        timestamp -= firstT;
+        // if(preT > timestamp) continue;
+        //cerr << timestamp << " " << preT << endl;
+        
         hk->Init(s, timestamp);
 #ifndef TIMETEST
         for(;!cyc_dat.empty() && timestamp + firstT - cyc_dat.front().timestamp + 1> cycle;cyc_dat.pop()) mp[cyc_dat.front().dat] -- ;
@@ -108,8 +121,8 @@ void BenchOurs(int argc, char* argv[]){
         mp[s]++;
         
 	//if( i % 10000 == 0) cerr << i << endl;
-
         if(timestamp >= 2*cycle && timestamp - latestT + 1 > (cycle / 10) ){
+            cerr <<"size" <<cyc_dat.size() << endl;
             latestT = timestamp;
             are = 0;
             out_num ++;
@@ -155,7 +168,7 @@ void BenchOurs(int argc, char* argv[]){
             */
             cerr << "lambda_Algorithm,Arrivals:"<<i << ",Recall Rate:"<<(double)tp/top_k<< endl;
             cerr <<"lambda_Algorithm,Arrivals:"<<i << ",Precision Rate:"<<(double)tp/top_k<< endl; // recall rate = Precision rate
-			cerr <<are / top_k <<endl;
+			cerr <<"lambda_Algorithm,Arrivals:"<<i << ",ARE:"<<are / top_k <<endl;
 			
             average_prec += (double)tp / top_k;
 			average_recall +=(double)tp / top_k;

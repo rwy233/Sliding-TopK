@@ -53,7 +53,8 @@ public:
     int memory;
     int cycle;
     int para_lambda;
-    Sketch(int num, int datalen, int _cycle, int _para_lambda,int _cycle_i);
+    int first_timestamp;
+    Sketch(int num, int datalen, int _cycle, int _para_lambda,int _cycle_i,int _first_timestamp);
     ~Sketch();
 
     void Delete_Bucket(Bucket* bucket);
@@ -93,11 +94,12 @@ Summary::Summary(int num, int dl, int _cycle, int _para_lambda){
     counter_size = 4 + 8*5 + dl;	// 1 counter, 2 pointer for double linked list, 1 pointer to bucket, 2 pointer for queue, head and tail, and 1 ID
     cycle = _cycle;
     para_lambda = _para_lambda;
-    S[0] = new Sketch(num/2, dl, _cycle,_para_lambda,0);
-    S[1] = new Sketch(num/2, dl, _cycle,_para_lambda,0);
+    S[0] = new Sketch(num/2, dl, _cycle,_para_lambda,0,0);
+    S[1] = new Sketch(num/2, dl, _cycle,_para_lambda,0,0);
 }
 
-Sketch::Sketch(int num, int dl, int _cycle, int _para_lambda,int _cycle_i){
+Sketch::Sketch(int num, int dl, int _cycle, int _para_lambda,int _cycle_i,int _first_timestamp){
+    first_timestamp = _first_timestamp;
     datalen = dl;
     cycle_i = _cycle_i;
     min_num = 0x7fffffff;
@@ -240,10 +242,11 @@ void Sketch::Init(DATA_TYPE data, int t){
 }
 
 void Summary::Init(DATA_TYPE data,int t){
-    if(t % cycle == 0){ // 每隔一个周期 删除旧的sketch
+    // cerr << t << endl;
+    while(t - S[1]->first_timestamp + 1 > cycle){ // 每隔一个周期 删除旧的sketch
         swap(S[0],S[1]);
         delete S[1];
-        S[1] = new Sketch(MAX_SIZE/2, datalen ,cycle,para_lambda,t/cycle);
+        S[1] = new Sketch(MAX_SIZE/2, datalen ,cycle,para_lambda,t/cycle,t);
     }
     S[1]->Init(data,t);
 }
